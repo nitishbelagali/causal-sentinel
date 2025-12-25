@@ -42,15 +42,17 @@ Causal Sentinel is an **open-source alternative to enterprise AIOps platforms** 
 ```
 🚨 Crash Detected: Nov 15, 2024
 📉 Revenue dropped 58% ($50K → $21K/day)
+![Anomaly Detection Graph](assets/dashboard_anomaly.png)
+*(The dashboard automatically flagging the revenue drop using Z-Score analysis)*
 
 🔍 Root Cause Identified:
    [GitHub] Changed payment API from async to sync loops
    Risk: HIGH | Component: payment_api
+    ![Root Cause Logs](assets/root_cause.png)
 
 💰 Financial Impact (Causal Inference):
-   Daily Loss: $23,849
-   Duration: 3 days
-   Total Impact: $71,547
+   Uses Microsoft DoWhy to answer: "What if this bug never happened?
+   ![Causal Impact Analysis](assets/causal_impact.png)
 ```
 
 **This is what Dynatrace charges $500K/year for. We do it for free.**
