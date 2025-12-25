@@ -273,6 +273,16 @@ causal-sentinel/
 
 ---
 
+## 📚 Documentation
+
+Complete guides for setup, deployment, and contribution:
+
+- **[API Setup Guide](docs/API_SETUP.md)** - Get credentials for GitHub, Slack, Jira, OpenAI
+- **[Deployment Guide](docs/DEPLOYMENT.md)** - Deploy to Streamlit Cloud, AWS, Docker, Heroku
+- **[Contributing Guide](docs/CONTRIBUTING.md)** - How to contribute to the project
+
+---
+
 ## 🛠️ Tech Stack
 
 | Component | Technology | Purpose |
@@ -346,7 +356,7 @@ causal-sentinel/
 
 ## 🤝 Contributing
 
-We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+We welcome contributions! See **[CONTRIBUTING.md](docs/CONTRIBUTING.md)** for guidelines.
 
 ### Quick Contribution Guide
 ```bash
@@ -370,7 +380,7 @@ git push origin feature/amazing-feature
 
 ## 📜 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the **[LICENSE](LICENSE)** file for details.
 
 **TL;DR:** You can use, modify, and distribute this freely, even commercially.
 
