@@ -9,7 +9,7 @@
 
 **Autonomous incident response that mathematically proves the financial impact of software bugs**
 
-[Features](#-key-features) • [Architecture](#-architecture) • [Quick Start](#-quick-start) • [Visual Demo](#-visual-demo) • [Documentation](#-documentation)
+[Features](#-key-features) • [Architecture](#-Architecture) • [Quick Start](#-quick-start) • [Visual Demo](#-visual-demo) • [Documentation](#-Documentation)
 
 </div>
 
@@ -420,9 +420,9 @@ This project implements concepts from:
 
 <div align="center">
 
-### ⭐ Star us on GitHub — it motivates us a lot!
+### ⭐ Star me on GitHub — it motivates me a lot!
 
-**Built with ❤️ by engineers frustrated with $500K/year observability bills**
+**Built with ❤️ by engineer frustrated with $500K/year observability bills**
 
 [⬆ Back to Top](#-causal-sentinel-enterprise-ai-observability-platform)
 
