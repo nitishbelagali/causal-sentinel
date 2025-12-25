@@ -42,7 +42,7 @@ Causal Sentinel is an **open-source alternative to enterprise AIOps platforms** 
 ```
 🚨 Crash Detected: Nov 15, 2024
 📉 Revenue dropped 58% ($50K → $21K/day)
-![Anomaly Detection Graph](assets/dashboard_anomaly.png)
+![Anomaly Detection Graph](https://github.com/nitishbelagali/causal-sentinel/blob/main/assets/causal_impact.png?raw=true)
 *(The dashboard automatically flagging the revenue drop using Z-Score analysis)*
 
 🔍 Root Cause Identified:
