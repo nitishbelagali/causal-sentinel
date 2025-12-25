@@ -424,6 +424,6 @@ This project implements concepts from:
 
 **Built with ❤️ by engineer frustrated with $500K/year observability bills**
 
-[⬆ Back to Top](#-causal-sentinel-enterprise-ai-observability-platform)
+[⬆ Back to Top](#-Causal-Sentinel:-Enterprise-AI-Observability-Platform)
 
 </div>
