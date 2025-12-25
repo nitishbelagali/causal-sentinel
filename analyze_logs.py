@@ -1,137 +1,139 @@
 import pandas as pd
-import json
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
+import json
+import time
 
 # --- CONFIGURATION ---
 load_dotenv()
-api_key = os.getenv("OPENAI_API_KEY")
 
-if not api_key:
-    print("❌ ERROR: No API Key found in .env file.")
-    print("Please create a .env file with: OPENAI_API_KEY=sk-...")
-    exit()
+# Input: The master file created by your fetch_data_lake.py script
+INPUT_FILE = "ingested_logs/master_logs.csv"
+# Output: The file you will upload to the dashboard
+OUTPUT_FILE = "analyzed_logs.csv"
 
-client = OpenAI(api_key=api_key)
+# API Key Check
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+if not OPENAI_API_KEY:
+    raise ValueError("❌ OPENAI_API_KEY not found in .env file! Please add it.")
 
-def analyze_log(log_message):
+client = OpenAI(api_key=OPENAI_API_KEY)
+
+def analyze_log_batch(logs_text):
     """
-    Sends a log message to the LLM to determine if it's a 'Causal Candidate'.
+    Sends a batch of mixed logs (Jira/Slack/GitHub) to GPT-4o for risk assessment.
     """
     prompt = f"""
     You are a Senior Site Reliability Engineer (SRE). 
-    Analyze this system log entry: "{log_message}"
-
-    Your Goal: Determine if this event could CAUSE a revenue drop or latency spike.
+    Analyze the following system logs (which may be Git Commits, Jira Tickets, or Slack Messages).
     
-    Rules:
-    1. documentation, css, typos, and routine maintenance are LOW risk.
-    2. database changes, api logic changes, infinite loops, and synchronous calls are HIGH risk.
+    Your goal is to identify operational RISKS.
+    
+    For each log entry, output a JSON object with:
+    1. "ai_risk": "HIGH" (if it implies a crash, downtime, urgent bug, or risky change) or "LOW".
+    2. "ai_component": The system component involved (e.g., "Database", "Frontend", "Payment API").
+    3. "ai_reasoning": A short, 5-word explanation of why you chose the risk level.
 
-    Return a JSON object with this exact format:
-    {{
-        "risk_level": "HIGH" or "LOW",
-        "component": "database" or "frontend" or "payment_api" or "other",
-        "reasoning": "brief explanation"
-    }}
+    Input Logs:
+    {logs_text}
+
+    Output Format:
+    Return ONLY a valid JSON list of objects. No markdown, no explanations.
+    Example:
+    [
+        {{"ai_risk": "HIGH", "ai_component": "Database", "ai_reasoning": "Database lock detected in Slack"}},
+        {{"ai_risk": "LOW", "ai_component": "Documentation", "ai_reasoning": "Routine readme update"}}
+    ]
     """
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4o-mini", 
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0, 
-            response_format={"type": "json_object"} 
+            model="gpt-4o",  # Use "gpt-3.5-turbo" if you want to save money
+            messages=[
+                {"role": "system", "content": "You are a helpful SRE assistant that outputs strict JSON."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0  # Deterministic output
         )
-        return json.loads(response.choices[0].message.content)
+        
+        # Clean the response to ensure valid JSON (remove ```json markers if AI adds them)
+        content = response.choices[0].message.content.strip()
+        if content.startswith("```json"):
+            content = content[7:]
+        if content.endswith("```"):
+            content = content[:-3]
+        
+        return json.loads(content)
+        
     except Exception as e:
-        print(f"⚠️ Error analyzing log: {e}")
-        return {"risk_level": "UNKNOWN", "component": "unknown", "reasoning": "API Error"}
+        print(f"⚠️ Error analyzing batch: {e}")
+        return []
 
-# --- MAIN EXECUTION ---
 def main():
-    print("🕵️  Archaeologist AI: Interactive Mode")
-    print("-------------------------------------")
+    print(f"📂 Loading logs from {INPUT_FILE}...")
     
-    # 1. GET FILE NAME
-    while True:
-        filename = input("📂 Enter the name of your logs CSV (e.g., real_github_logs.csv): ").strip()
-        if os.path.exists(filename):
-            break
-        print(f"❌ File '{filename}' not found. Try again.")
+    # 1. Validation
+    if not os.path.exists(INPUT_FILE):
+        print(f"❌ File not found: {INPUT_FILE}")
+        print("   -> Run 'python fetch_data_lake.py' first to generate it!")
+        return
 
-    # 2. LOAD DATA
+    # 2. Load Data
     try:
-        df_logs = pd.read_csv(filename)
-        print(f"✅ Loaded {len(df_logs)} rows.")
+        df = pd.read_csv(INPUT_FILE)
     except Exception as e:
         print(f"❌ Error reading CSV: {e}")
         return
 
-    # 3. MAP COLUMNS
-    print("\nColumns found:", list(df_logs.columns))
-    
-    # Ask user for the 'message' column
-    msg_col = input("👉 Type the column name containing the Log Message: ").strip()
-    while msg_col not in df_logs.columns:
-        print("❌ Column not found.")
-        msg_col = input(f"👉 Please type exactly one of {list(df_logs.columns)}: ").strip()
+    print(f"🔍 Found {len(df)} mixed events. Starting AI Analysis...")
 
-    # Ask user for the 'timestamp' column (Optional, but good for saving)
-    time_col = input("👉 Type the column name containing the Timestamp: ").strip()
-    while time_col not in df_logs.columns:
-        print("❌ Column not found.")
-        time_col = input(f"👉 Please type exactly one of {list(df_logs.columns)}: ").strip()
+    # 3. Prepare AI Columns
+    df["ai_risk"] = "LOW"
+    df["ai_component"] = "Unknown"
+    df["ai_reasoning"] = ""
 
-    # 4. SAFETY LIMIT (Important for Wallet!)
-    print(f"\n⚠️  WARNING: You have {len(df_logs)} logs.")
-    limit_input = input("🔢 How many logs should we analyze? (Press Enter for default 50): ").strip()
-    limit = int(limit_input) if limit_input.isdigit() else 50
-    
-    # Slice the dataframe
-    target_logs = df_logs.head(limit).copy()
-    print(f"🚀 Starting AI Analysis on first {limit} rows...")
+    # 4. Process in Batches (to respect Context Window & Rate Limits)
+    BATCH_SIZE = 10
+    total_batches = (len(df) // BATCH_SIZE) + 1
 
-    results = []
-    
-    # 5. LOOP AND ANALYZE
-    for index, row in target_logs.iterrows():
-        message_text = str(row[msg_col]) # Handle non-string data safely
+    for i in range(0, len(df), BATCH_SIZE):
+        batch = df.iloc[i : i + BATCH_SIZE]
         
-        # Simple progress bar
-        print(f"[{index+1}/{limit}] Analyzing: {message_text[:40]}...")
+        # Construct the text prompt for this batch
+        logs_text = ""
+        # iterate using explicit index to map back correctly
+        for idx, row in batch.iterrows():
+            # We explicitly tell the AI the source type (e.g., "Slack") so it understands context
+            source = row.get('source_type', 'Unknown')
+            msg = row.get('message', 'No message')
+            logs_text += f"Log ID {idx}: [{source}] {msg}\n"
         
-        analysis = analyze_log(message_text)
+        print(f"🤖 Processing Batch {i//BATCH_SIZE + 1}/{total_batches} ({len(batch)} items)...")
         
-        # Standardize the output row
-        # We keep the original data but add our AI tags
-        row_data = row.to_dict()
-        row_data['ai_risk'] = analysis.get('risk_level')
-        row_data['ai_component'] = analysis.get('component')
-        row_data['ai_reasoning'] = analysis.get('reasoning')
+        # Call AI
+        ai_results = analyze_log_batch(logs_text)
         
-        results.append(row_data)
+        # Map results back to the DataFrame
+        # We assume the AI returns the list in the same order. 
+        # (For production, we might map by ID, but sequential is usually fine for batches)
+        current_idx = i
+        for result in ai_results:
+            if current_idx < len(df):
+                df.at[current_idx, "ai_risk"] = result.get("ai_risk", "LOW")
+                df.at[current_idx, "ai_component"] = result.get("ai_component", "Unknown")
+                df.at[current_idx, "ai_reasoning"] = result.get("ai_reasoning", "N/A")
+                current_idx += 1
+        
+        # Sleep briefly to avoid hitting OpenAI rate limits
+        time.sleep(0.5)
 
-    # 6. SAVE RESULTS
-    output_filename = "analyzed_events.csv"
-    df_analyzed = pd.DataFrame(results)
-    
-    # Rename user columns to standard names for the dashboard (Optional, but helpful)
-    # We rename the user's columns to 'timestamp' and 'message' so the dashboard detects them easier
-    df_analyzed.rename(columns={msg_col: 'message', time_col: 'timestamp'}, inplace=True)
-    
-    df_analyzed.to_csv(output_filename, index=False)
-    
-    print(f"\n✅ Analysis Complete. Saved to '{output_filename}'")
-    
-    # Check for High Risk Findings
-    high_risk = df_analyzed[df_analyzed['ai_risk'] == 'HIGH']
-    if not high_risk.empty:
-        print(f"\n🔥 FOUND {len(high_risk)} HIGH RISK EVENTS:")
-        print(high_risk[['timestamp', 'message', 'ai_reasoning']].head())
-    else:
-        print("\n👍 No High Risk events found in this sample.")
+    # 5. Save Result
+    df.to_csv(OUTPUT_FILE, index=False)
+    print("="*40)
+    print(f"✅ Analysis Complete!")
+    print(f"📁 Output saved to: {OUTPUT_FILE}")
+    print("🚀 Next Step: Drag this file into your Streamlit Dashboard.")
 
 if __name__ == "__main__":
     main()
