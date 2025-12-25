@@ -9,7 +9,7 @@
 
 **Autonomous incident response that mathematically proves the financial impact of software bugs**
 
-[Features](#-key-features) • [Architecture](#-Architecture) • [Quick Start](#-quick-start) • [Visual Demo](#-visual-demo) • [Documentation](#-Documentation)
+[Features](#-key-features) • [Architecture](#-System-Flow-Diagram) • [Quick Start](#-quick-start) • [Visual Demo](#-visual-demo) • [Documentation](#-Documentation)
 
 </div>
 
