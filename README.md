@@ -9,7 +9,7 @@
 
 **Autonomous incident response that mathematically proves the financial impact of software bugs**
 
-[Features](#-key-features) • [Architecture](#-architecture) • [Quick Start](#-quick-start) • [Demo](#-live-demo) • [Documentation](#-documentation)
+[Features](#-key-features) • [Architecture](#-architecture) • [Quick Start](#-quick-start) • [Visual Demo](#-visual-demo) • [Documentation](#-documentation)
 
 </div>
 
@@ -42,20 +42,45 @@ Causal Sentinel is an **open-source alternative to enterprise AIOps platforms** 
 ```
 🚨 Crash Detected: Nov 15, 2024
 📉 Revenue dropped 58% ($50K → $21K/day)
-![Anomaly Detection Graph](https://github.com/nitishbelagali/causal-sentinel/blob/main/assets/causal_impact.png?raw=true)
-*(The dashboard automatically flagging the revenue drop using Z-Score analysis)*
 
 🔍 Root Cause Identified:
    [GitHub] Changed payment API from async to sync loops
    Risk: HIGH | Component: payment_api
-    ![Root Cause Logs](assets/root_cause.png)
 
 💰 Financial Impact (Causal Inference):
-   Uses Microsoft DoWhy to answer: "What if this bug never happened?
-   ![Causal Impact Analysis](assets/causal_impact.png)
+   Daily Loss: $23,849
+   Duration: 3 days
+   Total Impact: $71,547
 ```
 
 **This is what Dynatrace charges $500K/year for. We do it for free.**
+
+---
+
+## 📸 Visual Demo
+
+<div align="center">
+
+### 1. Anomaly Detection
+*The dashboard automatically flags revenue drops using Z-Score analysis*
+
+![Anomaly Detection Graph](assets/dashboard_anomaly.png)
+
+---
+
+### 2. Root Cause Identification
+*Multi-source log analysis pinpoints the suspect commit*
+
+![Root Cause Logs](assets/root_cause.png)
+
+---
+
+### 3. Causal Impact Analysis
+*DoWhy proves the financial impact with mathematical rigor*
+
+![Causal Impact Analysis](assets/causal_impact.png)
+
+</div>
 
 ---
 
@@ -92,7 +117,7 @@ Causal Sentinel is an **open-source alternative to enterprise AIOps platforms** 
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### Mermaid Flow Diagram
+### System Flow Diagram
 
 ```mermaid
 graph TB
@@ -180,7 +205,7 @@ Streamlit-based UI with:
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/yourusername/causal-sentinel.git
+git clone https://github.com/nitishbelagali/causal-sentinel.git
 cd causal-sentinel
 
 # 2. Create virtual environment
@@ -199,10 +224,11 @@ cp .env.example .env
 
 #### Option 1: Demo Mode (No API Keys Required)
 ```bash
-# Generate sample data
+# Launch dashboard
 streamlit run dashboard.py
-# Click "Generate Demo Files" button
-# Upload the downloaded CSVs
+
+# Click "Generate Demo Files" button in the UI
+# Upload the downloaded CSVs to see the analysis
 ```
 
 #### Option 2: With Real Data
@@ -215,7 +241,8 @@ python analyze_logs.py
 
 # Step 3: Launch dashboard
 streamlit run dashboard.py
-# Upload the generated analyzed_logs.csv
+
+# Step 4: Upload the generated analyzed_logs.csv
 ```
 
 ---
@@ -233,6 +260,10 @@ causal-sentinel/
 ├── 📄 LICENSE                   # MIT License
 ├── 📁 .streamlit/
 │   └── config.toml              # Streamlit config
+├── 📁 assets/                   # Screenshots and images
+│   ├── dashboard_anomaly.png
+│   ├── root_cause.png
+│   └── causal_impact.png
 ├── 📁 docs/
 │   ├── API_SETUP.md             # Credential setup guide
 │   ├── DEPLOYMENT.md            # Deployment options
@@ -320,7 +351,7 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 ### Quick Contribution Guide
 ```bash
 # 1. Fork & clone
-git clone https://github.com/yourusername/causal-sentinel.git
+git clone https://github.com/nitishbelagali/causal-sentinel.git
 
 # 2. Create feature branch
 git checkout -b feature/amazing-feature
@@ -358,7 +389,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Author**: Nitish Belagali
 - **Email**: nitish.belagali@gmail.com
-- **LinkedIn**: [[linkedin.com/in/nitishbelagali](https://linkedin.com/in/nitishbelagali)](https://www.linkedin.com/in/nitish-belagali-392646158/)
+- **LinkedIn**: [linkedin.com/in/nitish-belagali](https://www.linkedin.com/in/nitish-belagali-392646158/)
 - **GitHub**: [@nitishbelagali](https://github.com/nitishbelagali)
 
 ### Get Help
